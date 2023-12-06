@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
+using UnityEditor.TerrainTools;
 using UnityEngine;
 
 namespace ArrayTool
@@ -7,33 +9,49 @@ namespace ArrayTool
     public class Array : MonoBehaviour
     {
         [Header("Main Settings")]
-        [SerializeField] [OnChangedCall(nameof(OnArraySizeChanged))] private GameObject prefab;
-        [SerializeField] [OnChangedCall(nameof(OnArraySizeChanged))] [Min(0)] private int arraySize = 0;
+        [SerializeField] private GameObject prefab;
+        [SerializeField] [Min(0)] private int arraySize = 0;
 
         [Header("Position Offset Settings")]
-        [SerializeField] [OnChangedCall(nameof(OnPositionOffsetChanged))] private float xOffset = 0;
-        [SerializeField] [OnChangedCall(nameof(OnPositionOffsetChanged))] private float yOffset = 0;
-        [SerializeField] [OnChangedCall(nameof(OnPositionOffsetChanged))] private float zOffset = 0;
+        [SerializeField] private float xOffset = 0;
+        [SerializeField] private float yOffset = 0;
+        [SerializeField] private float zOffset = 0;
 
         [Header("Randomize Position Settings")]
-        [SerializeField] [OnChangedCall(nameof(OnRandomizePositionChanged))] private bool shouldRandomizePositionFactor = false;
-        [SerializeField] [OnChangedCall(nameof(OnRandomizePositionChanged))] [Range(0, 1)] private float xRandomPositionFactor = 0;
-        [SerializeField] [OnChangedCall(nameof(OnRandomizePositionChanged))] [Range(0, 1)] private float yRandomPositionFactor = 0;
-        [SerializeField] [OnChangedCall(nameof(OnRandomizePositionChanged))] [Range(0, 1)] private float zRandomPositionFactor = 0;
+        [SerializeField] private bool shouldRandomizePositionFactor = false;
+        [SerializeField] [Range(0, 1)] private float xRandomPositionFactor = 0;
+        [SerializeField] [Range(0, 1)] private float yRandomPositionFactor = 0;
+        [SerializeField] [Range(0, 1)] private float zRandomPositionFactor = 0;
 
         [Header("Randomize Rotation Settings")]
-        [SerializeField] [OnChangedCall(nameof(OnRandomizeRotationChanged))] private bool shouldRandomizeRotationFactor = false;
-        [SerializeField] [OnChangedCall(nameof(OnRandomizeRotationChanged))] [Range(0, 1)] private float xRandomRotationFactor = 0;
-        [SerializeField] [OnChangedCall(nameof(OnRandomizeRotationChanged))] [Range(0, 1)] private float yRandomRotationFactor = 0;
-        [SerializeField] [OnChangedCall(nameof(OnRandomizeRotationChanged))] [Range(0, 1)] private float zRandomRotationFactor = 0;
+        [SerializeField] private bool shouldRandomizeRotationFactor = false;
+        [SerializeField] [Range(0, 1)] private float xRandomRotationFactor = 0;
+        [SerializeField] [Range(0, 1)] private float yRandomRotationFactor = 0;
+        [SerializeField] [Range(0, 1)] private float zRandomRotationFactor = 0;
 
         [Header("Randomize Scale Settings")]
-        [SerializeField] [OnChangedCall(nameof(OnRandomizeScaleChanged))] private bool shouldRandomizeScaleFactor = false;
-        [SerializeField] [OnChangedCall(nameof(OnRandomizeScaleChanged))] [Range(0, 1)] private float xRandomScaleFactor = 0;
-        [SerializeField] [OnChangedCall(nameof(OnRandomizeScaleChanged))] [Range(0, 1)] private float yRandomScaleFactor = 0;
-        [SerializeField] [OnChangedCall(nameof(OnRandomizeScaleChanged))] [Range(0, 1)] private float zRandomScaleFactor = 0;
+        [SerializeField] private bool shouldRandomizeScaleFactor = false;
+        [SerializeField] [Range(0, 1)] private float xRandomScaleFactor = 0;
+        [SerializeField] [Range(0, 1)] private float yRandomScaleFactor = 0;
+        [SerializeField] [Range(0, 1)] private float zRandomScaleFactor = 0;
 
         private List<GameObject> createdObjects = new List<GameObject>();
+        private FieldChangesTracker changesTracker = new FieldChangesTracker();
+
+        private void OnEnable ()
+        {
+            print("Enabled");
+        }
+
+        private void OnGUI ()
+        {
+            print("OnGUI");
+        }
+
+        private void OnValidate ()
+        {
+            StartCoroutine(OnValueChanged());
+        }
 
         #region Callbacks
 
@@ -209,6 +227,35 @@ namespace ArrayTool
         {
             yield return new WaitForSeconds(0);
             DestroyImmediate(obj);
+        }
+
+        private IEnumerator OnValueChanged ()
+        {
+            yield return new WaitForSeconds(0);
+            if (changesTracker.TrackFieldChanges(this, x => x.arraySize) || changesTracker.TrackFieldChanges(this, x => x.prefab))
+            {
+                OnArraySizeChanged();
+            }
+
+            if (changesTracker.TrackFieldChanges(this, x => x.xOffset) || changesTracker.TrackFieldChanges(this, x => x.yOffset) || changesTracker.TrackFieldChanges(this, x => x.zOffset))
+            {
+                OnPositionOffsetChanged();
+            }
+
+            if (changesTracker.TrackFieldChanges(this, x => x.shouldRandomizePositionFactor) || changesTracker.TrackFieldChanges(this, x => x.xRandomPositionFactor) || changesTracker.TrackFieldChanges(this, x => x.yRandomPositionFactor) || changesTracker.TrackFieldChanges(this, x => x.zRandomPositionFactor))
+            {
+                OnRandomizePositionChanged();
+            }
+
+            if (changesTracker.TrackFieldChanges(this, x => x.shouldRandomizeRotationFactor) || changesTracker.TrackFieldChanges(this, x => x.xRandomRotationFactor) || changesTracker.TrackFieldChanges(this, x => x.yRandomRotationFactor) || changesTracker.TrackFieldChanges(this, x => x.zRandomRotationFactor))
+            {
+                OnRandomizeRotationChanged();
+            }
+
+            if (changesTracker.TrackFieldChanges(this, x => x.shouldRandomizeScaleFactor) || changesTracker.TrackFieldChanges(this, x => x.xRandomScaleFactor) || changesTracker.TrackFieldChanges(this, x => x.yRandomScaleFactor) || changesTracker.TrackFieldChanges(this, x => x.zRandomScaleFactor))
+            {
+                OnRandomizeScaleChanged();
+            }
         }
 
         #endregion
