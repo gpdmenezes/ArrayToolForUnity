@@ -1,6 +1,6 @@
-using Codice.CM.Common.Serialization.Replication;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace ArrayTool
@@ -39,31 +39,50 @@ namespace ArrayTool
 
         #region Initialization
 
-        private void OnEnable ()
-        {
-            print("OnEnable");
-            LoadCreatedObjects();
-        }
-
-        private void OnDisable ()
-        {
-            print("OnDisable");
-            SaveCreatedObjects();
-        }
-
-        private void SaveCreatedObjects ()
-        {
-            
-        }
-
-        private void LoadCreatedObjects ()
-        {
-            
-        }
-
         private void OnValidate ()
         {
+            RefreshCreatedObjectsList();
             StartCoroutine(OnValueChanged());
+        }
+
+        private void RefreshCreatedObjectsList()
+        {
+            createdObjects.Clear();
+            if (transform.childCount <= 0) return;
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                GameObject child = transform.GetChild(i).gameObject;
+                createdObjects.Add(child);
+            }
+        }
+
+        private IEnumerator OnValueChanged()
+        {
+            yield return new WaitForSeconds(0);
+            if (changesTracker.TrackFieldChanges(this, x => x.arraySize) || changesTracker.TrackFieldChanges(this, x => x.prefab))
+            {
+                OnArraySizeChanged();
+            }
+
+            if (changesTracker.TrackFieldChanges(this, x => x.xOffset) || changesTracker.TrackFieldChanges(this, x => x.yOffset) || changesTracker.TrackFieldChanges(this, x => x.zOffset))
+            {
+                OnPositionOffsetChanged();
+            }
+
+            if (changesTracker.TrackFieldChanges(this, x => x.shouldRandomizePositionFactor) || changesTracker.TrackFieldChanges(this, x => x.xRandomPositionFactor) || changesTracker.TrackFieldChanges(this, x => x.yRandomPositionFactor) || changesTracker.TrackFieldChanges(this, x => x.zRandomPositionFactor))
+            {
+                OnRandomizePositionChanged();
+            }
+
+            if (changesTracker.TrackFieldChanges(this, x => x.shouldRandomizeRotationFactor) || changesTracker.TrackFieldChanges(this, x => x.xRandomRotationFactor) || changesTracker.TrackFieldChanges(this, x => x.yRandomRotationFactor) || changesTracker.TrackFieldChanges(this, x => x.zRandomRotationFactor))
+            {
+                OnRandomizeRotationChanged();
+            }
+
+            if (changesTracker.TrackFieldChanges(this, x => x.shouldRandomizeScaleFactor) || changesTracker.TrackFieldChanges(this, x => x.xRandomScaleFactor) || changesTracker.TrackFieldChanges(this, x => x.yRandomScaleFactor) || changesTracker.TrackFieldChanges(this, x => x.zRandomScaleFactor))
+            {
+                OnRandomizeScaleChanged();
+            }
         }
 
         #endregion
@@ -267,40 +286,6 @@ namespace ArrayTool
                 float newY = createdObjects[i].transform.localScale.y + (Random.Range(0, yRandomScaleFactor) * 2);
                 float newZ = createdObjects[i].transform.localScale.z + (Random.Range(0, zRandomScaleFactor) * 2);
                 createdObjects[i].transform.localScale = new Vector3(newX, newY, newZ);
-            }
-        }
-
-        #endregion
-
-        #region Helpers
-
-        private IEnumerator OnValueChanged ()
-        {
-            yield return new WaitForSeconds(0);
-            if (changesTracker.TrackFieldChanges(this, x => x.arraySize) || changesTracker.TrackFieldChanges(this, x => x.prefab))
-            {
-                OnArraySizeChanged();
-                SaveCreatedObjects();
-            }
-
-            if (changesTracker.TrackFieldChanges(this, x => x.xOffset) || changesTracker.TrackFieldChanges(this, x => x.yOffset) || changesTracker.TrackFieldChanges(this, x => x.zOffset))
-            {
-                OnPositionOffsetChanged();
-            }
-
-            if (changesTracker.TrackFieldChanges(this, x => x.shouldRandomizePositionFactor) || changesTracker.TrackFieldChanges(this, x => x.xRandomPositionFactor) || changesTracker.TrackFieldChanges(this, x => x.yRandomPositionFactor) || changesTracker.TrackFieldChanges(this, x => x.zRandomPositionFactor))
-            {
-                OnRandomizePositionChanged();
-            }
-
-            if (changesTracker.TrackFieldChanges(this, x => x.shouldRandomizeRotationFactor) || changesTracker.TrackFieldChanges(this, x => x.xRandomRotationFactor) || changesTracker.TrackFieldChanges(this, x => x.yRandomRotationFactor) || changesTracker.TrackFieldChanges(this, x => x.zRandomRotationFactor))
-            {
-                OnRandomizeRotationChanged();
-            }
-
-            if (changesTracker.TrackFieldChanges(this, x => x.shouldRandomizeScaleFactor) || changesTracker.TrackFieldChanges(this, x => x.xRandomScaleFactor) || changesTracker.TrackFieldChanges(this, x => x.yRandomScaleFactor) || changesTracker.TrackFieldChanges(this, x => x.zRandomScaleFactor))
-            {
-                OnRandomizeScaleChanged();
             }
         }
 
