@@ -1,7 +1,6 @@
+using Codice.CM.Common.Serialization.Replication;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
-using UnityEditor.TerrainTools;
 using UnityEngine;
 
 namespace ArrayTool
@@ -38,14 +37,28 @@ namespace ArrayTool
         private List<GameObject> createdObjects = new List<GameObject>();
         private FieldChangesTracker changesTracker = new FieldChangesTracker();
 
+        #region Initialization
+
         private void OnEnable ()
         {
-            print("Enabled");
+            print("OnEnable");
+            LoadCreatedObjects();
         }
 
-        private void OnGUI ()
+        private void OnDisable ()
         {
-            print("OnGUI");
+            print("OnDisable");
+            SaveCreatedObjects();
+        }
+
+        private void SaveCreatedObjects ()
+        {
+            
+        }
+
+        private void LoadCreatedObjects ()
+        {
+            
         }
 
         private void OnValidate ()
@@ -53,14 +66,18 @@ namespace ArrayTool
             StartCoroutine(OnValueChanged());
         }
 
+        #endregion
+
         #region Callbacks
 
         public void OnArraySizeChanged ()
         {
-            if (!prefab || arraySize <= 0) return;
+            if (!prefab) return;
 
-            ClearChildObjects();
-            GenerateCopyObjects();
+            CheckCreatedObjects();
+
+            if (arraySize <= 0) return;
+
             CheckForPositionChange();
             CheckForRotationChange();
             CheckForScaleChange();
@@ -91,25 +108,58 @@ namespace ArrayTool
         }
 
         #endregion
-
+        
         #region Objects
 
-        private void ClearChildObjects ()
+        private void CheckCreatedObjects ()
         {
-            for (int i = 0; i < createdObjects.Count; i++)
+            if (arraySize == 0)
             {
-                StartCoroutine(DestroyGameObjectNow(createdObjects[i]));
+                RemoveAllCreatedObjects();
+            } 
+            else if (arraySize < createdObjects.Count)
+            {
+                RemoveSurplusCreatedObjects();
+            } 
+            else if (arraySize > createdObjects.Count)
+            {
+                CreateNewObjects();
             }
+        }
 
+        private void RemoveAllCreatedObjects ()
+        {
+            if (createdObjects.Count > 0)
+            {
+                for (int i = 0; i < createdObjects.Count; i++)
+                {
+                    DestroyImmediate(createdObjects[i]);
+                }
+            }
             createdObjects.Clear();
         }
 
-        private void GenerateCopyObjects ()
+        private void RemoveSurplusCreatedObjects ()
         {
-            for (int i = 0; i < arraySize; i++)
+            int surplusAmount = createdObjects.Count - arraySize;
+            int targetQuantity = createdObjects.Count - surplusAmount;
+
+            for (int i = createdObjects.Count - 1; i >= targetQuantity; i--)
+            {
+                GameObject obj = createdObjects[i];
+                createdObjects.Remove(obj);
+                DestroyImmediate(obj);
+            }
+        }
+
+        private void CreateNewObjects ()
+        {
+            int creationAmount = arraySize - createdObjects.Count;
+
+            for (int i = 0; i < creationAmount; i++)
             {
                 GameObject newCopy = Instantiate(prefab, this.transform);
-                newCopy.name = prefab.name + "(" + i + ")";
+                newCopy.name = prefab.name + " (" + createdObjects.Count + ")";
                 createdObjects.Add(newCopy);
             }
         }
@@ -143,7 +193,8 @@ namespace ArrayTool
             if (shouldRandomizeScaleFactor)
             {
                 ApplyRandomScaleFactor();
-            } else
+            } 
+            else
             {
                 ResetScale();
             }
@@ -223,18 +274,13 @@ namespace ArrayTool
 
         #region Helpers
 
-        private IEnumerator DestroyGameObjectNow (GameObject obj)
-        {
-            yield return new WaitForSeconds(0);
-            DestroyImmediate(obj);
-        }
-
         private IEnumerator OnValueChanged ()
         {
             yield return new WaitForSeconds(0);
             if (changesTracker.TrackFieldChanges(this, x => x.arraySize) || changesTracker.TrackFieldChanges(this, x => x.prefab))
             {
                 OnArraySizeChanged();
+                SaveCreatedObjects();
             }
 
             if (changesTracker.TrackFieldChanges(this, x => x.xOffset) || changesTracker.TrackFieldChanges(this, x => x.yOffset) || changesTracker.TrackFieldChanges(this, x => x.zOffset))

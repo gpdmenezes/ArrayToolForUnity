@@ -91,5 +91,4 @@ namespace ArrayTool
             return membersInfo;
         }
     }
-
 }
