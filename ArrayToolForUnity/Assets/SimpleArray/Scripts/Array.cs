@@ -39,7 +39,7 @@ namespace ArrayTool
 
         #region Initialization
 
-        private void OnValidate ()
+        private void OnValidate()
         {
             RefreshCreatedObjectsList();
             StartCoroutine(OnValueChanged());
@@ -52,6 +52,7 @@ namespace ArrayTool
             for (int i = 0; i < transform.childCount; i++)
             {
                 GameObject child = transform.GetChild(i).gameObject;
+                child.SetActive(true);
                 createdObjects.Add(child);
             }
         }
@@ -179,6 +180,7 @@ namespace ArrayTool
             {
                 GameObject newCopy = Instantiate(prefab, this.transform);
                 newCopy.name = prefab.name + " (" + createdObjects.Count + ")";
+                newCopy.SetActive(true);
                 createdObjects.Add(newCopy);
             }
         }
